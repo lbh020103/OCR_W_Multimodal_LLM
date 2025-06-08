@@ -1,0 +1,76 @@
+/* Custom styles for OCR app */
+
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #f1f8ff;
+}
+
+.result-pre {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.image-preview-container {
+    margin-bottom: 15px;
+}
+
+#imagePreview {
+    max-height: 300px;
+    object-fit: contain;
+    border: 1px solid #dee2e6;
+    padding: 5px;
+}
+
+#loadingIndicator {
+    padding: 30px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Custom styling for JSON formatting */
+.json-key {
+    color: #0033cc;
+}
+
+.json-value {
+    color: #183691;
+}
+
+.json-string {
+    color: #183691;
+}
+
+.json-number {
+    color: #009688;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    #imagePreview {
+        max-height: 200px;
+    }
+} 

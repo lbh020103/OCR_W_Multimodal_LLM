@@ -6,28 +6,62 @@ This project provides a solution for OCR (Optical Character Recognition) using a
 
 ```
 ORC/
-├── OCR_with_multimodal_LLM.ipynb  # Server component (Colab notebook)
-├── main.py                        # Client component
-└── README.md                      # This documentation
+├── server.py                     # Main server implementation
+├── config.py                     # Configuration settings
+├── utils.py                      # Utility functions
+├── main.py                       # Client component
+├── static/                       # Static assets
+│   ├── css/                      # CSS stylesheets
+│   └── js/                       # JavaScript files
+├── templates/                    # HTML templates
+│   └── index.html                # Web UI template
+├── uploads/                      # Temporary folder for uploads
+└── README.md                     # This documentation
 ```
+
+## Features
+
+- **Multiple Input Methods**:
+  - Process images from URLs
+  - Process local image files via upload
+  - Process base64-encoded images
+
+- **Multiple Output Formats**:
+  - JSON format for structured data
+  - CSV format for tabular data
+  - Plain text for full document transcription
+
+- **Web Interface**:
+  - User-friendly web UI for uploading and processing images
+  - Image preview functionality
+  - Result copy button
+
+- **Client Library**:
+  - Command-line interface for batch processing
+  - Supports all input methods and output formats
+  - Result saving to files
 
 ## Architecture
 
 The system consists of two main components:
 
-1. **Server Component** (OCR_with_multimodal_LLM.ipynb): A Colab notebook that:
+1. **Server Component** (server.py):
    - Loads the Vintern-1B-v2 multimodal model
    - Sets up a Flask API server
    - Exposes the API through Ngrok for public access
+   - Provides a web interface for direct use
 
-2. **Client Component** (main.py): A Python script that:
+2. **Client Component** (main.py):
    - Sends images to the server via API
-   - Receives and processes OCR results
+   - Supports multiple input methods
+   - Supports multiple output formats
+   - Command-line interface for easy integration
 
 ## Setup Instructions
 
-### Server Setup (Google Colab)
+### Server Setup
 
+#### Google Colab (using OCR_with_multimodal_LLM.ipynb)
 1. Open `OCR_with_multimodal_LLM.ipynb` in Google Colab
 2. Run the installation cell to install required dependencies
 3. Run the model loading cell to initialize the Vintern-1B-v2 model
@@ -36,64 +70,105 @@ The system consists of two main components:
    - Get your auth token from the ngrok dashboard
    - In Colab, go to "Secrets" tab and add your token as "ngrok_token"
 5. Run the API server cell to start the Flask server with Ngrok
-6. Copy the Ngrok URL displayed in the output (looks like `https://xxxx-xx-xx-xxx-xxx.ngrok-free.app`)
+6. Copy the Ngrok URL displayed in the output
 
-### Client Setup (Local Machine)
+#### Local Setup (using server.py)
+1. Install required dependencies:
+   ```bash
+   pip install flask flask-cors pyngrok pyyaml pillow torch torchvision transformers
+   ```
+2. Create a `.config/ngrok/ngrok.yml` file with your authtoken:
+   ```yaml
+   authtoken: YOUR_NGROK_TOKEN
+   ```
+3. Run the server:
+   ```bash
+   python server.py
+   ```
+
+### Client Setup
 
 1. Install required dependencies:
    ```bash
-   pip install requests
+   pip install requests pillow
    ```
-2. Open `main.py` and update the Ngrok URL:
-   ```python
-   url = "YOUR_NGROK_URL/ocr"  # Replace with your Ngrok URL
-   ```
-3. Run the client script to test:
+2. Run the client:
    ```bash
-   python main.py
+   # Process image from URL
+   python main.py --url https://example.com/image.jpg --format json
+   
+   # Process local image file
+   python main.py --file path/to/image.jpg --format csv
+   
+   # Process and save result to file
+   python main.py --file path/to/image.jpg --output result.txt
    ```
 
 ## Usage
 
-### API Endpoint
+### Web Interface
 
-The API exposes a single endpoint:
+1. Open the server URL in a web browser
+2. Upload an image file or provide an image URL
+3. Select the desired output format
+4. Click "Process Image" or "Process URL"
+5. View the results and use the copy button to copy them
+
+### API Endpoints
+
+The API exposes two main endpoints:
 
 - **POST /ocr**
-  - Input: JSON payload with `image_url` field pointing to an image accessible via HTTP
-  - Output: JSON response with structured OCR data
+  - Process images from URL or base64 data
+  - Input: JSON payload with `image_url` or `image_base64` field and optional `output_format`
+  - Output: JSON response with `response_message` field
 
-Example request:
+- **POST /upload**
+  - Process uploaded image files
+  - Input: Form data with `file` field and optional `output_format`
+  - Output: JSON response with `response_message` field
+
+Example request for URL processing:
 ```python
 response = requests.post(
-    url="https://your-ngrok-url.ngrok-free.app/ocr",
-    json={"image_url": "https://example.com/path/to/receipt.jpg"}
+    url="https://your-server-url/ocr",
+    json={
+        "image_url": "https://example.com/receipt.jpg",
+        "output_format": "json"
+    }
 )
 ```
 
-### Client Usage
+### Command-Line Client
 
-The `main.py` script provides a simple example of how to use the API:
+The `main.py` script provides a command-line interface for the OCR service:
 
-```python
-import requests
+```bash
+# Basic usage
+python main.py --url https://example.com/receipt.jpg
 
-def perform_ocr(image_path):
-    response = requests.post(
-        url="https://your-ngrok-url.ngrok-free.app/ocr",
-        json={"image_url": image_path}
-    )
-    if response.status_code == 200:
-        return response.json().get("response_message")
-    else:
-        print("Error:", response.status_code, response.text)
-        return None
+# Specify server URL
+python main.py --server https://your-server-url --url https://example.com/receipt.jpg
 
-# Example usage
-image_path = "https://example.com/path/to/receipt.jpg"
-result = perform_ocr(image_path)
-print("OCR Result:", result)
+# Process local file
+python main.py --file path/to/receipt.jpg
+
+# Change output format
+python main.py --url https://example.com/receipt.jpg --format csv
+
+# Save result to file
+python main.py --url https://example.com/receipt.jpg --output result.json
 ```
+
+## Configuration
+
+The `config.py` file contains various settings that can be modified:
+
+- Server port and Ngrok settings
+- Model configuration (name, dtype, etc.)
+- Generation parameters
+- Image processing settings
+- Output format templates
 
 ## Model Details
 
@@ -104,37 +179,21 @@ This project uses the Vintern-1B-v2 model, a Vietnamese multimodal model capable
 - Vietnamese text understanding
 - Table structure recognition
 
-The model can output data in different formats (JSON or CSV) based on the prompt provided. For example:
-
-```python
-# JSON format prompt
-prompt = '''<image>\nNhận diện hoá đơn trong ảnh. Chỉ trả về phần liệt kê các mặt hàng hàng dưới dạng JSON:
-[
-  {
-    "Tên món": "Tên món",
-    "Số lượng": "Số lượng",
-    "Đơn giá": "Đơn giá",
-    "Thành tiền": "Thành tiền"
-  },
-]
-'''
-
-# CSV format prompt
-prompt = '''<image>\nNhận diện hoá đơn trong ảnh. Chỉ trả về phần liệt kê các mặt hàng hàng dưới dạng CSV'''
-```
+The model can output data in different formats (JSON, CSV, or plain text) based on the prompt provided.
 
 ## Limitations
 
-- The Ngrok URL changes every time you restart the server in Colab
-- The server might timeout after extended periods of inactivity on Colab
+- The Ngrok URL changes every time you restart the server
+- The server might timeout after extended periods of inactivity
 - The model is optimized for Vietnamese receipts and invoices
 - Performance depends on image quality and format
 
 ## Troubleshooting
 
-- If the client cannot connect, check that the Ngrok URL is correct and the server is running
+- If the client cannot connect, check that the server URL is correct and the server is running
 - If OCR results are poor, try using higher quality images or different image formats
-- If Colab crashes, check your GPU/RAM usage and consider using a higher-tier Colab account
+- If you're getting memory errors, try reducing the `MAX_IMAGE_CHUNKS` in config.py
+- For large images, the processing might take longer than expected
 
 ## License
 
